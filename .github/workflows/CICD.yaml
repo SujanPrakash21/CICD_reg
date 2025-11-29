@@ -46,7 +46,7 @@ jobs:
   deploy-to-render:
     needs: train-and-report
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    #if: github.event_name == 'push'
     steps:
       - name: Trigger Render Deploy
         run: |
