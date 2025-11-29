@@ -1,26 +1,29 @@
-name: mlops-exaple-tensorflow-regression
+name: mlops-example-tensorflow-regression
 on: [push]
 jobs:
   run:
     runs-on: [ubuntu-latest]
     container: docker://dvcorg/cml-py3:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - name: 'Train my model'
         env:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-
-          # Your ML workflow goes here
+          # Install dependencies
+          pip install --upgrade pip
           pip install -r requirements.txt
+          
+          # Train model
           python model.py
           
+          # Create report
           echo "## Model Metrics" > report.md
           cat metrics.txt >> report.md
           
-          echo "\n## Model Performance" >> report.md
-          echo "Model performance metrics are on the plot below." >> report.md
+          echo "" >> report.md
+          echo "## Model Performance" >> report.md
+          echo "Model performance metrics are on the plot below:" >> report.md
           
           cml-publish model_results.png --md >> report.md
-          
           cml-send-comment report.md
