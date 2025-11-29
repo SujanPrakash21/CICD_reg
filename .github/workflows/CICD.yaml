@@ -1,5 +1,13 @@
 name: mlops-example-tensorflow-regression
-on: [push]
+
+on: 
+  push:
+    branches:
+      - main
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -7,7 +15,7 @@ permissions:
   issues: write
 
 jobs:
-  run:
+  train-and-report:
     runs-on: ubuntu-latest
     container: docker://iterativeai/cml:0-dvc2-base1
     steps:
@@ -32,5 +40,22 @@ jobs:
           echo "" >> report.md
           echo "![Model Results](./model_results.png)" >> report.md
           
-          # Create comment with published image
+          # Create comment with results
           cml comment create report.md
+
+  deploy-to-render:
+    needs: train-and-report
+    runs-on: ubuntu-latest
+    # Only deploy when pushing to main branch (not on PRs or feature branches)
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Trigger Render Deploy
+        run: |
+          echo "Deploying to Render..."
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+          echo "Deployment triggered successfully!"
+      
+      - name: Deployment Status
+        run: |
+          echo "🚀 Deployment initiated!"
+          echo "Check status at: https://dashboard.render.com"
