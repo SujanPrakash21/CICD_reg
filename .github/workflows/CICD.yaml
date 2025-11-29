@@ -46,16 +46,17 @@ jobs:
   deploy-to-render:
     needs: train-and-report
     runs-on: ubuntu-latest
-    # Only deploy when pushing to main branch (not on PRs or feature branches)
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.event_name == 'push'
     steps:
       - name: Trigger Render Deploy
         run: |
-          echo "Deploying to Render..."
+          echo "🚀 Deploying to Render..."
+          echo "Branch: ${{ github.ref_name }}"
           curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
-          echo "Deployment triggered successfully!"
+          echo "✅ Deployment triggered successfully!"
       
       - name: Deployment Status
         run: |
-          echo "🚀 Deployment initiated!"
+          echo "🎉 Deployment initiated!"
+          echo "Branch deployed: ${{ github.ref_name }}"
           echo "Check status at: https://dashboard.render.com"
