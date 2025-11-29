@@ -24,6 +24,7 @@ jobs:
           echo "## Model Performance" >> report.md
           echo "Model performance metrics are on the plot below." >> report.md
           echo "" >> report.md
+          echo "![Model Results](./model_results.png)" >> report.md
           
-          # Publish plot and create comment
-          cml comment create report.md --publish model_results.png
+          # Create comment with published image
+          cml comment create report.md
