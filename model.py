@@ -66,19 +66,20 @@ output_shape = y_train[0].shape
 # Set random seed
 tf.random.set_seed(42)
 
-# Create a model using the Sequential API
+# Create an improved model with more capacity
 model = tf.keras.Sequential([
-    tf.keras.layers.Dense(1, input_shape=[1]), 
+    tf.keras.layers.Dense(64, activation='relu', input_shape=[1]),
+    tf.keras.layers.Dense(64, activation='relu'),
     tf.keras.layers.Dense(1)
     ])
 
-# Compile the model
-model.compile(loss=tf.keras.losses.mae,
-              optimizer=tf.keras.optimizers.SGD(),
-              metrics=['mae'])
+# Compile the model with better optimizer and learning rate
+model.compile(loss=tf.keras.losses.mse,
+              optimizer=tf.keras.optimizers.Adam(learning_rate=0.01),
+              metrics=['mae', 'mse'])
 
-# Fit the model
-model.fit(X_train, y_train, epochs=100, verbose=0)
+# Fit the model with more epochs
+model.fit(X_train, y_train, epochs=300, verbose=0)
 
 # Make and plot predictions for model_1
 y_preds = model.predict(X_test, verbose=0)
