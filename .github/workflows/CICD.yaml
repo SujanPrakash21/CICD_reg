@@ -3,7 +3,7 @@ on: [push]
 jobs:
   run:
     runs-on: ubuntu-latest
-    container: docker://ghcr.io/iterative/cml:0.18.28
+    container: docker://iterativeai/cml:0.18.28
     steps:
       - uses: actions/checkout@v3
       - name: 'Train my model'
