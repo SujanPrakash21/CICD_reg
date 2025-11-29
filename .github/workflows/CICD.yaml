@@ -1,5 +1,11 @@
 name: mlops-example-tensorflow-regression
 on: [push]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
   run:
     runs-on: ubuntu-latest
