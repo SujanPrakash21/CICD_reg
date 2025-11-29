@@ -46,7 +46,14 @@ jobs:
   deploy-to-render:
     needs: train-and-report
     runs-on: ubuntu-latest
+    # Run on push events only (not on pull requests)
+    if: github.event_name == 'push'
     steps:
+      - name: Check deployment conditions
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Deploying to Render..."
       - name: Trigger Render Deploy
         run: |
           echo "🚀 Deploying to Render..."
