@@ -3,15 +3,15 @@ on: [push]
 jobs:
   run:
     runs-on: ubuntu-latest
-    container: docker://ghcr.io/iterative/cml:0-dvc2-base1
+    container: docker://iterativeai/cml:0-dvc2-base1
     steps:
-      - uses: actions/checkout@v3
-      - name: 'Train my model'
+      - uses: actions/checkout@v4
+          
+      - name: Train model
         env:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Install dependencies
-          pip install --upgrade pip
           pip install -r requirements.txt
           
           # Train model
@@ -20,10 +20,10 @@ jobs:
           # Create report
           echo "## Model Metrics" > report.md
           cat metrics.txt >> report.md
-          
           echo "" >> report.md
           echo "## Model Performance" >> report.md
-          echo "Model performance metrics are on the plot below:" >> report.md
+          echo "Model performance metrics are on the plot below." >> report.md
+          echo "" >> report.md
           
-          cml-publish model_results.png --md >> report.md
-          cml-send-comment report.md
+          # Publish plot and create comment
+          cml comment create report.md --publish model_results.png
