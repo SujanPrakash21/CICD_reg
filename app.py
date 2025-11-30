@@ -13,7 +13,8 @@ metrics_text = ""
 
 def load_model():
     global model, metrics_text
-    # Absolute path relative to app.py
+
+    # Path to saved model
     model_path = os.path.join(os.path.dirname(__file__), 'model.keras')
     print("Looking for model at:", model_path)
 
@@ -22,10 +23,9 @@ def load_model():
             model = tf.keras.models.load_model(model_path)
             print("Model loaded successfully!")
 
-            # Optional: calculate metrics on some test data
-            # Update X_test and y_test according to your dataset
-            X_test = np.arange(40, 100, 4).reshape(-1, 1)
-            y_test = np.arange(110, 170, 4).reshape(-1, 1)
+            # Calculate metrics on test data matching your training dataset
+            X_test = np.arange(40, 100, 4).reshape(-1, 1)   # example test data
+            y_test = np.arange(110, 170, 4).reshape(-1, 1)  # example test labels
 
             y_preds = model.predict(X_test, verbose=0)
             mae_1 = float(tf.reduce_mean(tf.keras.losses.mean_absolute_error(y_test, y_preds)).numpy())
@@ -37,7 +37,7 @@ def load_model():
     else:
         print(f"No saved model found at {model_path}")
 
-# Load the model when the app starts
+# Load the model at startup
 load_model()
 
 @app.route('/')
@@ -66,6 +66,7 @@ def predict():
     try:
         data = request.get_json()
         input_value = data.get('input')
+
         if input_value is None:
             return jsonify({"error": "No input provided"}), 400
 
