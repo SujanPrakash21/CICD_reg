@@ -82,7 +82,7 @@ model.compile(loss=tf.keras.losses.mse,
 model.fit(X_train, y_train, epochs=300, verbose=0)
 
 #  SAVE TRAINED MODEL FOR RENDER API
-model.save("saved_model")
+model.save("saved_model.h5")
 
 # Make and plot predictions for model_1
 y_preds = model.predict(X_test, verbose=0)
