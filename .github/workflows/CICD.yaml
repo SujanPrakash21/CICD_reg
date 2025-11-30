@@ -47,7 +47,7 @@ jobs:
     needs: train-and-report
     runs-on: ubuntu-latest
     # Run on push events only (not on pull requests)
-    #if: github.event_name == 'push'
+    if: github.event_name == 'push'
     steps:
       - name: Check deployment conditions
         run: |
