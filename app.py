@@ -18,6 +18,9 @@ def load_model():
     else:
         print("No saved model found. Train the model first.")
 
+# Load model when app starts
+load_model()
+
 @app.route('/')
 def home():
     return jsonify({
