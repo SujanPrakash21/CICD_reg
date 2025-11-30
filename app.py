@@ -13,7 +13,7 @@ model = None
 def load_model():
     global model
     if os.path.exists('saved_model'):
-        model = tf.keras.models.load_model('saved_model')
+        model_path = os.path.join(os.path.dirname(__file__), 'saved_model')
         print("Model loaded successfully!")
     else:
         print("No saved model found. Train the model first.")
