@@ -82,15 +82,21 @@ model.compile(loss=tf.keras.losses.mse,
 model.fit(X_train, y_train, epochs=300, verbose=0)
 
 #  SAVE TRAINED MODEL FOR RENDER API
-model.save("saved_model.h5")
+model.export("saved_model")
+
+
 
 # Make and plot predictions for model_1
 y_preds = model.predict(X_test, verbose=0)
 plot_predictions(train_data=X_train, train_labels=y_train,  test_data=X_test, test_labels=y_test,  predictions=y_preds)
 
 # Calculate model_1 metrics
-mae_1 = np.round(float(tf.reduce_mean(mae(y_test, y_preds)).numpy()), 2)
-mse_1 = np.round(float(tf.reduce_mean(mse(y_test, y_preds)).numpy()), 2)
+mae_fn = tf.keras.losses.MeanAbsoluteError()
+mse_fn = tf.keras.losses.MeanSquaredError()
+
+mae_1 = np.round(float(mae_fn(y_test, y_preds).numpy()), 2)
+mse_1 = np.round(float(mse_fn(y_test, y_preds).numpy()), 2)
+
 print(f'\nMean Absolute Error = {mae_1}, Mean Squared Error = {mse_1}.')
 
 # Write metrics to file
