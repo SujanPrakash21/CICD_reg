@@ -46,23 +46,23 @@ jobs:
   deploy-to-render:
     needs: train-and-report
     runs-on: ubuntu-latest
-    # Run on push events only (not on pull requests)
-    #if: github.event_name == 'push'
     steps:
-      - name: Check deployment conditions
+      - name: Checkout repo
+        uses: actions/checkout@v4
+  
+      - name: Install Render CLI
         run: |
-          echo "Event: ${{ github.event_name }}"
-          echo "Branch: ${{ github.ref_name }}"
-          echo "Deploying to Render..."
+          curl -fsSL https://raw.githubusercontent.com/render-oss/cli/refs/heads/main/bin/install.sh | sh
+  
       - name: Trigger Render Deploy
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
         run: |
-          BRANCH_ESCAPED=$(echo "${GITHUB_REF_NAME}" | sed 's/\//%2F/g')
-          echo " Deploying branch: $BRANCH_ESCAPED"
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}?branch=$BRANCH_ESCAPED"
-          echo " Deployment triggered successfully!"
-      
+          echo "🚀 Deploying branch: ${{ github.ref_name }}"
+          render deploys create <SERVICE_ID> --branch ${{ github.ref_name }} --output json --confirm
+  
       - name: Deployment Status
         run: |
-          echo " Deployment initiated!"
-          echo "Branch deployed: ${{ github.ref_name }}"
+          echo "Deployment triggered for branch: ${{ github.ref_name }}"
           echo "Check status at: https://dashboard.render.com"
+
