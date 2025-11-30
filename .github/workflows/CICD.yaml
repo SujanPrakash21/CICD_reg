@@ -1,0 +1,68 @@
+name: mlops-example-tensorflow-regression
+
+on: 
+  push:
+    branches:
+      - main
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  train-and-report:
+    runs-on: ubuntu-latest
+    container: docker://iterativeai/cml:0-dvc2-base1
+    steps:
+      - uses: actions/checkout@v4
+          
+      - name: Train model
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Install dependencies
+          pip install -r requirements.txt
+          
+          # Train model
+          python model.py
+          
+          # Create report
+          echo "## Model Metrics" > report.md
+          cat metrics.txt >> report.md
+          echo "" >> report.md
+          echo "## Model Performance" >> report.md
+          echo "Model performance metrics are on the plot below." >> report.md
+          echo "" >> report.md
+          echo "![Model Results](./model_results.png)" >> report.md
+          
+          # Create comment with results
+          cml comment create report.md
+
+  deploy-to-render:
+    needs: train-and-report
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+  
+      - name: Install Render CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/render-oss/cli/refs/heads/main/bin/install.sh | sh
+  
+      - name: Trigger Render Deploy
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          echo "🚀 Deploying branch: ${{ github.ref_name }}"
+          render deploys create <SERVICE_ID> --branch ${{ github.ref_name }} --output json --confirm
+  
+      - name: Deployment Status
+        run: |
+          echo "Deployment triggered for branch: ${{ github.ref_name }}"
+          echo "Check status at: https://dashboard.render.com"
+
