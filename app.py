@@ -1,80 +1,87 @@
-from flask import Flask, request, jsonify, send_file
+# app_fastapi.py
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from pydantic import BaseModel
 import tensorflow as tf
 import numpy as np
 import os
 
-app = Flask(__name__)
+app = FastAPI(title="ML Model API")
 
+# Request body schema
+class PredictRequest(BaseModel):
+    input: float
+
+# Global model and metrics
 model = None
 metrics_text = ""
+plot_file = os.path.join(os.path.dirname(__file__), "model_results.png")
 
+# Load model
 def load_model():
     global model, metrics_text
-    model_path = os.path.join(os.path.dirname(__file__), 'model.keras')
+    model_path = os.path.join(os.path.dirname(__file__), "model.keras")
     print("Looking for model at:", model_path)
     if os.path.exists(model_path):
         try:
             model = tf.keras.models.load_model(model_path)
             print("Model loaded successfully!")
 
-            # Optional: load metrics from file
-            metrics_file = os.path.join(os.path.dirname(__file__), 'metrics.txt')
-            if os.path.exists(metrics_file):
-                with open(metrics_file, 'r') as f:
-                    metrics_text = f.read()
+            # Example test data
+            X_test = np.arange(40, 100, 4).reshape(-1, 1)
+            y_test = np.arange(110, 170, 4).reshape(-1, 1)
+
+            y_preds = model.predict(X_test, verbose=0)
+            mae_1 = float(tf.reduce_mean(tf.keras.losses.mean_absolute_error(y_test, y_preds)).numpy())
+            mse_1 = float(tf.reduce_mean(tf.keras.losses.mean_squared_error(y_test, y_preds)).numpy())
+            metrics_text = f"Mean Absolute Error = {mae_1:.2f}, Mean Squared Error = {mse_1:.2f}"
+
         except Exception as e:
             print("Error loading model:", e)
     else:
-        print("No saved model found.")
+        print(f"No saved model found at {model_path}")
 
 load_model()
 
-@app.route('/')
+# Endpoints
+@app.get("/")
 def home():
-    return jsonify({
+    return {
         "message": "ML Model API",
         "endpoints": {
-            "/predict": "POST",
-            "/health": "GET",
-            "/metrics": "GET",
-            "/plot": "GET"
+            "/predict": "POST - Make predictions",
+            "/health": "GET - Check API health",
+            "/metrics": "GET - Get model metrics",
+            "/plot": "GET - Get model result plot"
         }
-    })
+    }
 
-@app.route('/health')
+@app.get("/health")
 def health():
-    return jsonify({"status": "healthy", "model_loaded": model is not None})
+    return {
+        "status": "healthy",
+        "model_loaded": model is not None
+    }
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    if model is None:
-        return jsonify({"error": "Model not loaded"}), 500
-    try:
-        data = request.get_json()
-        input_value = data.get('input')
-        if input_value is None:
-            return jsonify({"error": "No input provided"}), 400
-        X = np.array([[input_value]], dtype=np.float32)
-        prediction = model.predict(X, verbose=0)
-        return jsonify({"input": float(input_value), "prediction": float(prediction[0][0])})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/metrics')
+@app.get("/metrics")
 def metrics():
     if metrics_text:
-        return jsonify({"metrics": metrics_text})
+        return {"metrics": metrics_text}
     else:
-        return jsonify({"error": "Metrics not available"}), 404
+        raise HTTPException(status_code=404, detail="Metrics not available")
 
-@app.route('/plot')
-def plot():
-    plot_path = os.path.join(os.path.dirname(__file__), 'model_results.png')
-    if os.path.exists(plot_path):
-        return send_file(plot_path, mimetype='image/png')
+@app.get("/plot")
+def get_plot():
+    if os.path.exists(plot_file):
+        return FileResponse(plot_file, media_type="image/png")
     else:
-        return jsonify({"error": "Plot not available"}), 404
+        raise HTTPException(status_code=404, detail="Plot not found")
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
+@app.post("/predict")
+def predict(request: PredictRequest):
+    if model is None:
+        raise HTTPException(status_code=500, detail="Model not loaded")
+
+    X = np.array([[request.input]], dtype=np.float32)
+    prediction = model.predict(X, verbose=0)
+    return {"input": request.input, "prediction": float(prediction[0][0])}
