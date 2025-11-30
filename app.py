@@ -1,4 +1,4 @@
-# app.py - Flask API to serve your model predictions
+# app.py - Flask API to serve your ML model predictions
 
 from flask import Flask, request, jsonify
 import tensorflow as tf
@@ -7,18 +7,37 @@ import os
 
 app = Flask(__name__)
 
-# Load the trained model (you'll need to save it first)
+# Global model and metrics
 model = None
+metrics_text = ""
 
 def load_model():
-    global model
-    if os.path.exists('saved_model'):
-        model_path = os.path.join(os.path.dirname(__file__), 'saved_model')
-        print("Model loaded successfully!")
-    else:
-        print("No saved model found. Train the model first.")
+    global model, metrics_text
+    # Absolute path relative to app.py
+    model_path = os.path.join(os.path.dirname(__file__), 'saved_model')
+    print("Looking for model at:", model_path)
 
-# Load model when app starts
+    if os.path.exists(model_path):
+        try:
+            model = tf.keras.models.load_model(model_path)
+            print("Model loaded successfully!")
+
+            # Optional: calculate metrics on some test data
+            # Update X_test and y_test according to your dataset
+            X_test = np.arange(40, 100, 4).reshape(-1, 1)
+            y_test = np.arange(110, 170, 4).reshape(-1, 1)
+
+            y_preds = model.predict(X_test, verbose=0)
+            mae_1 = float(tf.reduce_mean(tf.keras.losses.mean_absolute_error(y_test, y_preds)).numpy())
+            mse_1 = float(tf.reduce_mean(tf.keras.losses.mean_squared_error(y_test, y_preds)).numpy())
+            metrics_text = f"Mean Absolute Error = {mae_1:.2f}, Mean Squared Error = {mse_1:.2f}"
+
+        except Exception as e:
+            print("Error loading model:", e)
+    else:
+        print(f"No saved model found at {model_path}")
+
+# Load the model when the app starts
 load_model()
 
 @app.route('/')
@@ -43,42 +62,30 @@ def health():
 def predict():
     if model is None:
         return jsonify({"error": "Model not loaded"}), 500
-    
+
     try:
         data = request.get_json()
         input_value = data.get('input')
-        
         if input_value is None:
             return jsonify({"error": "No input provided"}), 400
-        
-        # Prepare input
+
         X = np.array([[input_value]], dtype=np.float32)
-        
-        # Make prediction
         prediction = model.predict(X, verbose=0)
-        
         return jsonify({
             "input": float(input_value),
             "prediction": float(prediction[0][0])
         })
-    
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route('/metrics')
 def metrics():
-    try:
-        with open('metrics.txt', 'r') as f:
-            metrics_text = f.read()
-        return jsonify({
-            "metrics": metrics_text
-        })
-    except FileNotFoundError:
-        return jsonify({
-            "error": "Metrics file not found"
-        }), 404
+    if metrics_text:
+        return jsonify({"metrics": metrics_text})
+    else:
+        return jsonify({"error": "Metrics not available"}), 404
 
 if __name__ == '__main__':
-    load_model()
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
