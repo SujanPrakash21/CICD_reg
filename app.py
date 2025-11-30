@@ -14,7 +14,7 @@ metrics_text = ""
 def load_model():
     global model, metrics_text
     # Absolute path relative to app.py
-    model_path = os.path.join(os.path.dirname(__file__), 'saved_model')
+    model_path = os.path.join(os.path.dirname(__file__), 'model.keras')
     print("Looking for model at:", model_path)
 
     if os.path.exists(model_path):
