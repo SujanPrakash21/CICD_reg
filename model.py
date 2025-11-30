@@ -82,7 +82,7 @@ model.compile(loss=tf.keras.losses.mse,
 model.fit(X_train, y_train, epochs=300, verbose=0)
 
 #  SAVE TRAINED MODEL FOR RENDER API
-model.export("saved_model")
+model.save("saved_model")
 
 
 
@@ -94,8 +94,8 @@ plot_predictions(train_data=X_train, train_labels=y_train,  test_data=X_test, te
 mae_fn = tf.keras.losses.MeanAbsoluteError()
 mse_fn = tf.keras.losses.MeanSquaredError()
 
-mae_1 = np.round(float(mae_fn(y_test, y_preds).numpy())
-mse_1 = np.round(float(mse_fn(y_test, y_preds).numpy())
+mae_1 = np.round(float(mae_fn(y_test, y_preds).numpy()), 2)
+mse_1 = np.round(float(mse_fn(y_test, y_preds).numpy()), 2)
 
 print(f'\nMean Absolute Error = {mae_1}, Mean Squared Error = {mse_1}.')
 
