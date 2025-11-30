@@ -94,8 +94,8 @@ plot_predictions(train_data=X_train, train_labels=y_train,  test_data=X_test, te
 mae_fn = tf.keras.losses.MeanAbsoluteError()
 mse_fn = tf.keras.losses.MeanSquaredError()
 
-mae_1 = np.round(float(mae_fn(y_test, y_preds).numpy()), 2)
-mse_1 = np.round(float(mse_fn(y_test, y_preds).numpy()), 2)
+mae_1 = np.round(float(mae_fn(y_test, y_preds).numpy())
+mse_1 = np.round(float(mse_fn(y_test, y_preds).numpy())
 
 print(f'\nMean Absolute Error = {mae_1}, Mean Squared Error = {mse_1}.')
 
